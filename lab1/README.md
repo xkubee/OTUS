@@ -18,7 +18,7 @@
 
 ### Loopback 
 
-#### Netmask - 32
+#### netmask - 32
 
 |    UNIT       |   INTERFACE     | ADDRESS |
 | :------------ |:---------------:| -------:|
@@ -35,7 +35,7 @@
 
 ### Physical
 
-#### Netmask - 24
+#### netmask - 24
 
 |    UNIT       |   INTERFACE       |    ADDRESS   |
 | :------------ |:-----------------:| ------------:|
