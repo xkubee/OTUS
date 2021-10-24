@@ -4,7 +4,8 @@
 
 ## Схема сети
 
-![дз3](https://user-images.githubusercontent.com/55625869/138610232-c1aef733-2cd1-46f7-9f98-a0d0aba2ef7f.PNG)
+![дз3](https://user-images.githubusercontent.com/55625869/138611023-bc773f3c-b1fb-4faa-978e-024ba046a617.PNG)
+
 
 ## Настройка сетевых интерфейсов
 
