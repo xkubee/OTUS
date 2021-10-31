@@ -74,9 +74,11 @@ BFD (На NX OS реализован на уровне железа) и Template
 |    UNIT        |   INTERFACE       |     ADDRESS     |
 | :------------- |:-----------------:| ---------------:|
 |    Client1     |      e0/0         | 192.168.1.1/24  |
-|    Client2     |      e0/0         | 192.168.1.2/24  |
-|    Client3     |      e0/0         | 192.168.1.3/24  |
+|    Client2     |      e0/0         | 192.168.2.1/24  |
+|    Client3     |      e0/0         | 192.168.3.1/24  |
+|    Client4     |      e0/0         | 192.168.4.1/24  |
 
+## Важные моменты в конфигурировании:
 
 ## spine1
 
@@ -106,19 +108,19 @@ BFD (На NX OS реализован на уровне железа) и Template
 
 	router bgp 65000
 	  router-id 10.10.10.10
-	  bestpath as-path multipath-relax
-	  address-family ipv4 unicast
+	  bestpath as-path multipath-relax  <--- балансировка
+	  address-family ipv4 unicast       <--- адреса сетей, которые необходимо транслировать в "wan" (или же, остальным spine)  
 		network 10.0.0.0/30
 		network 10.0.0.4/30
 		network 10.0.0.8/30
-	  template peer LEAFS
-		timers 3 9
+	  template peer LEAFS               <--- создание шаблона для удобства настройки leaf-устройств
+		timers 3 9                  <--- таймеры
 		address-family ipv4 unicast
-	  neighbor 10.0.0.2
-		inherit peer LEAFS
-		remote-as 65001
+	  neighbor 10.0.0.2                 <--- адреса соседей, с которыми должен быть осуществлён "пиринг"
+		inherit peer LEAFS      
+		remote-as 65001             <--- номер автономной системы соседа
 		description LEAF1
-		update-source Ethernet1/1
+		update-source Ethernet1/1   <--- через данный интерфейс с соседом 10.0.0.2 будет осуществляться пиринг с последующей передачей всей доступной информации 
 	  neighbor 10.0.0.6
 		inherit peer LEAFS
 		remote-as 65002
@@ -139,113 +141,6 @@ BFD (На NX OS реализован на уровне железа) и Template
 		remote-as 65000
 		description SPINE3
 		update-source Ethernet1/4
-
-
-## spine2
-
-#### network settings 
-
-	interface Ethernet1/1      <--- network leaf1
-	  no switchport
-	  ip address 10.0.0.17/30
-	  no shutdown
-
-	interface Ethernet1/2      <--- network leaf2
-	  no switchport
-	  ip address 10.0.0.21/30
-	  no shutdown
-
-	interface Ethernet1/3      <--- network leaf3
-	  no switchport
-	  ip address 10.0.0.25/30
-	  no shutdown
-
-	interface Ethernet1/4      <--- network SPINES
-	  no switchport
-	  ip address 172.16.1.2/29
-	  no shutdown
-
-#### bgp settings
-
-	router bgp 65000
-	  router-id 20.20.20.20
-	  bestpath as-path multipath-relax
-	  address-family ipv4 unicast
-		network 10.0.0.16/30
-		network 10.0.0.20/30
-		network 10.0.0.24/30
-	  template peer LEAFS
-		timers 3 9
-		address-family ipv4 unicast
-	  template peer SPINES
-		remote-as 65000
-		update-source Ethernet1/4
-		timers 3 9
-		address-family ipv4 unicast
-	  neighbor 10.0.0.18
-		inherit peer LEAFS
-		remote-as 65001
-		description LEAF1
-		update-source Ethernet1/1
-	  neighbor 10.0.0.22
-		inherit peer LEAFS
-		remote-as 65002
-		description LEAF2
-		update-source Ethernet1/2
-	  neighbor 10.0.0.26
-		inherit peer LEAFS
-		remote-as 65003
-		description LEAF3
-		update-source Ethernet1/3
-	  neighbor 172.16.1.1
-		inherit peer SPINES
-		description SPINE1
-	  neighbor 172.16.1.3
-		inherit peer SPINES
-		description SPINE3
-
-
-## spine3
-
-#### network settings
-
-	interface Ethernet1/1        <--- network leaf4
-	  no switchport
-	  ip address 10.0.0.33/30
-	  no shutdown
-
-	interface Ethernet1/2        <--- network SPINES
-	  no switchport
-	  ip address 172.16.1.3/29
-	  no shutdown
-
-#### bgp settings 
-
-	router bgp 65000
-	  router-id 30.30.30.30
-	  bestpath as-path multipath-relax
-	  address-family ipv4 unicast
-		network 10.0.0.32/30
-	  template peer LEAFS
-		timers 3 9
-		address-family ipv4 unicast
-	  template peer SPINES
-		remote-as 65000
-		update-source Ethernet1/2
-		timers 3 9
-		address-family ipv4 unicast
-	  neighbor 10.0.0.34
-		inherit peer LEAFS
-		remote-as 65004
-		description LEAF4
-		update-source Ethernet1/1
-	  neighbor 172.16.1.1
-		inherit peer SPINES
-		description SPINE1
-	  neighbor 172.16.1.2
-		inherit peer SPINES
-		description SPINE2
-
 
 ## leaf1
 
@@ -288,113 +183,109 @@ BFD (На NX OS реализован на уровне железа) и Template
 		description SPINE2
 		update-source Ethernet1/2
 
-## leaf2
+### Настройки остальных устройств аналогичны и приведены в файлах settings_*.conf
 
-#### network settings
+## Маршрутная информация:
 
-	interface Ethernet1/1       <--- network spine1   
-	  no switchport
-	  ip address 10.0.0.6/30
-	  no shutdown
+## spine1
 
-	interface Ethernet1/2       <--- network spine2   
-	  no switchport
-	  ip address 10.0.0.22/30
-	  no shutdown
+	spine1# show ip route
+	IP Route Table for VRF "default"
+	'*' denotes best ucast next-hop
+	'**' denotes best mcast next-hop
+	'[x/y]' denotes [preference/metric]
+	'%<string>' in via output denotes VRF <string>
 
-	interface Ethernet1/5       <--- network client2  
-	  no switchport
-	  ip address 192.168.2.10/24
-	  no shutdown
+	10.0.0.0/30, ubest/mbest: 1/0, attached
+	    *via 10.0.0.1, Eth1/1, [0/0], 1d11h, direct
+	10.0.0.1/32, ubest/mbest: 1/0, attached
+	    *via 10.0.0.1, Eth1/1, [0/0], 1d11h, local
+	10.0.0.4/30, ubest/mbest: 1/0, attached
+	    *via 10.0.0.5, Eth1/2, [0/0], 1d11h, direct
+	10.0.0.5/32, ubest/mbest: 1/0, attached
+	    *via 10.0.0.5, Eth1/2, [0/0], 1d11h, local
+	10.0.0.8/30, ubest/mbest: 1/0, attached
+	    *via 10.0.0.9, Eth1/3, [0/0], 1d11h, direct
+	10.0.0.9/32, ubest/mbest: 1/0, attached
+	    *via 10.0.0.9, Eth1/3, [0/0], 1d11h, local
+	10.0.0.16/30, ubest/mbest: 1/0
+	    *via 172.16.1.2, [200/0], 00:59:33, bgp-65000, internal, tag 65000
+	10.0.0.20/30, ubest/mbest: 1/0
+	    *via 172.16.1.2, [200/0], 00:59:25, bgp-65000, internal, tag 65000
+	10.0.0.24/30, ubest/mbest: 1/0
+	    *via 172.16.1.2, [200/0], 00:59:14, bgp-65000, internal, tag 65000
+	10.0.0.32/30, ubest/mbest: 1/0
+	    *via 172.16.1.3, [200/0], 01:09:04, bgp-65000, internal, tag 65000
+	10.10.10.10/32, ubest/mbest: 2/0, attached
+	    *via 10.10.10.10, Lo0, [0/0], 1d11h, local
+	    *via 10.10.10.10, Lo0, [0/0], 1d11h, direct
+	172.16.1.0/29, ubest/mbest: 1/0, attached
+	    *via 172.16.1.1, Eth1/4, [0/0], 01:40:43, direct
+	172.16.1.1/32, ubest/mbest: 1/0, attached
+	    *via 172.16.1.1, Eth1/4, [0/0], 01:40:43, local
+	192.168.1.0/24, ubest/mbest: 1/0
+	    *via 10.0.0.2, [20/0], 00:59:33, bgp-65000, external, tag 65001
+	192.168.2.0/24, ubest/mbest: 1/0
+	    *via 10.0.0.6, [20/0], 00:59:24, bgp-65000, external, tag 65002
+	192.168.3.0/24, ubest/mbest: 1/0
+	    *via 10.0.0.10, [20/0], 00:59:12, bgp-65000, external, tag 65003
+	192.168.4.0/24, ubest/mbest: 1/0
+	    *via 10.0.0.34, [200/0], 01:08:58, bgp-65000, internal, tag 65004
 
-#### bgp settings 
-
-	router bgp 65002
-	  router-id 2.2.2.2
-	  bestpath as-path multipath-relax
-	  address-family ipv4 unicast
-		network 192.168.2.0/24
-	  template peer SPINES
-		remote-as 65000
-		timers 3 9
-		address-family ipv4 unicast
-	  neighbor 10.0.0.5
-		inherit peer SPINES
-		description SPINE1
-		update-source Ethernet1/1
-	  neighbor 10.0.0.21
-		inherit peer SPINES
-		description SPINE2
-		update-source Ethernet1/2
-
-## leaf3
-
-#### network settings
-
-	interface Ethernet1/1       <--- network spine1
-	  no switchport
-	  ip address 10.0.0.10/30
-	  no shutdown
-
-	interface Ethernet1/2       <--- network spine2
-	  no switchport
-	  ip address 10.0.0.26/30
-	  no shutdown
-
-	interface Ethernet1/3       <--- network client3
-	  no switchport
-	  ip address 192.168.3.10/24
-	  no shutdown
-
-#### bgp settings 
-
-	router bgp 65003
-	  router-id 3.3.3.3
-	  bestpath as-path multipath-relax
-	  address-family ipv4 unicast
-		network 192.168.3.0/24
-	  template peer SPINES
-		remote-as 65000
-		timers 3 9
-		address-family ipv4 unicast
-	  neighbor 10.0.0.9
-		inherit peer SPINES
-		description SPINE1
-		update-source Ethernet1/1
-	  neighbor 10.0.0.25
-		inherit peer SPINES
-		description SPINE2
-		update-source Ethernet1/2
-
+Знает обо всех нужных сетях.
 
 ## leaf4
 
-#### network settings
+	leaf4# show ip route
+	IP Route Table for VRF "default"
+	'*' denotes best ucast next-hop
+	'**' denotes best mcast next-hop
+	'[x/y]' denotes [preference/metric]
+	'%<string>' in via output denotes VRF <string>
 
-	interface Ethernet1/1        <--- network spine3
-	  no switchport
-	  ip address 10.0.0.34/30
-	  no shutdown
+	4.4.4.4/32, ubest/mbest: 2/0, attached
+	    *via 4.4.4.4, Lo0, [0/0], 1d10h, local
+	    *via 4.4.4.4, Lo0, [0/0], 1d10h, direct
+	10.0.0.0/30, ubest/mbest: 1/0
+	    *via 10.0.0.33, [20/0], 01:03:33, bgp-65004, external, tag 65000
+	10.0.0.4/30, ubest/mbest: 1/0
+	    *via 10.0.0.33, [20/0], 01:03:24, bgp-65004, external, tag 65000
+	10.0.0.8/30, ubest/mbest: 1/0
+	    *via 10.0.0.33, [20/0], 01:03:15, bgp-65004, external, tag 65000
+	10.0.0.16/30, ubest/mbest: 1/0
+	    *via 10.0.0.33, [20/0], 01:01:03, bgp-65004, external, tag 65000
+	10.0.0.20/30, ubest/mbest: 1/0
+	    *via 10.0.0.33, [20/0], 01:00:54, bgp-65004, external, tag 65000
+	10.0.0.24/30, ubest/mbest: 1/0
+	    *via 10.0.0.33, [20/0], 01:00:44, bgp-65004, external, tag 65000
+	10.0.0.32/30, ubest/mbest: 1/0, attached
+	    *via 10.0.0.34, Eth1/1, [0/0], 1d10h, direct
+	10.0.0.34/32, ubest/mbest: 1/0, attached
+	    *via 10.0.0.34, Eth1/1, [0/0], 1d10h, local
+	192.168.1.0/24, ubest/mbest: 1/0
+	    *via 10.0.0.33, [20/0], 01:03:32, bgp-65004, external, tag 65000
+	192.168.2.0/24, ubest/mbest: 1/0
+	    *via 10.0.0.33, [20/0], 01:03:23, bgp-65004, external, tag 65000
+	192.168.3.0/24, ubest/mbest: 1/0
+	    *via 10.0.0.33, [20/0], 01:03:14, bgp-65004, external, tag 65000
+	192.168.4.0/24, ubest/mbest: 1/0, attached
+	    *via 192.168.4.10, Eth1/2, [0/0], 1d10h, direct
+	192.168.4.10/32, ubest/mbest: 1/0, attached
+	    *via 192.168.4.10, Eth1/2, [0/0], 1d10h, local
 
-	interface Ethernet1/2        <--- network client4
-	  no switchport
-	  ip address 192.168.4.10/24
-	  no shutdown
+Знает обо всех нужных сетях.
 
-#### bgp settings
+## Сетевая связность оконечных устройств:
 
-	router bgp 65004
-	  router-id 4.4.4.4
-	  bestpath as-path multipath-relax
-	  address-family ipv4 unicast
-		network 192.168.4.0/24
-	  template peer SPINES
-		remote-as 65000
-		timers 3 9
-		address-family ipv4 unicast
-	  neighbor 10.0.0.33
-		inherit peer SPINES
-		description SPINE4
-		update-source Ethernet1/1
+## client1
 
+	c1> ping 192.168.4.1
+
+	192.168.4.1 icmp_seq=1 timeout
+	84 bytes from 192.168.4.1 icmp_seq=2 ttl=60 time=41.412 ms
+	84 bytes from 192.168.4.1 icmp_seq=3 ttl=60 time=26.755 ms
+	84 bytes from 192.168.4.1 icmp_seq=4 ttl=60 time=30.994 ms
+	84 bytes from 192.168.4.1 icmp_seq=5 ttl=60 time=38.981 ms
+
+Клиенты c1 и c2 находятся в сетевой доступности друг для друга.
 
