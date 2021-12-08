@@ -55,55 +55,112 @@ P.S. Именно к loopback-интерфейсам необходимо при
 
 ### Описание настройки протокола PIM-SM на CISCO NX-OS
 
- 1. Необходимо включить протокол PIM:
+ #### 1. Необходимо включить протокол PIM:
   feature pim
- 2. Настроить использование loopback-интерфейса в качестве "обменника" PIM-сообщениями:
+ #### 2. Настроить использование loopback-интерфейса в качестве "обменника" PIM-сообщениями:
   ip pim register-source loopback 0
- 3. Включить протокол PIM-SM на всех интерфейсах, которым нужно будет обмениваться PIM-сообщениями:
+ #### 3. Включить протокол PIM-SM на всех интерфейсах, которым нужно будет обмениваться PIM-сообщениями:
   ip pim sparse-mode
- 4. !!! Включить протокол PIM-SM на loopback-интерфейсе!!!:
+ #### 4. !!! Включить протокол PIM-SM на loopback-интерфейсе!!!:
   interface loopback 0
    ip pim sparse-mode
- 5. Указать адрес RP (устройству, которое будет строить "деревья", по которым будет передаваться multicast-трафик)
+ #### 5. Указать адрес RP (адрес устройства, которое будет строить "деревья", по которым будет передаваться multicast-трафик)
 
  Данных настроек необходимо и достаточно для того, чтобы протокол PIM-SM правильно заработал в сети.
 
 ### Пример конфигурации протокола PIM-SM на устройстве leaf2
 
-			ip pim rp-address 100.100.100.100 group-list 224.0.0.0/4
-			ip pim ssm range 232.0.0.0/8
-			ip pim register-source loopback0
+	ip pim rp-address 100.100.100.100 group-list 224.0.0.0/4
+	ip pim ssm range 232.0.0.0/8
+	ip pim register-source loopback0
 
-			interface Ethernet1/1
-			  no switchport
-			  ip address 10.0.0.6/30
-			  ip ospf network point-to-point
-			  no ip ospf passive-interface
-			  ip router ospf 1 area 0.0.0.2
-			  ip pim sparse-mode
-			  no shutdown
+	interface Ethernet1/1
+	  no switchport
+	  ip address 10.0.0.6/30
+	  ip ospf network point-to-point
+	  no ip ospf passive-interface
+	  ip router ospf 1 area 0.0.0.2
+	  ip pim sparse-mode
+	  no shutdown
 
-			interface Ethernet1/2
-			  no switchport
-			  ip address 10.0.0.22/30
-			  ip ospf network point-to-point
-			  no ip ospf passive-interface
-			  ip router ospf 1 area 0.0.0.2
-			  ip pim sparse-mode
-			  no shutdown
+	interface Ethernet1/2
+	  no switchport
+	  ip address 10.0.0.22/30
+	  ip ospf network point-to-point
+	  no ip ospf passive-interface
+	  ip router ospf 1 area 0.0.0.2
+	  ip pim sparse-mode
+	  no shutdown
 
-			interface Ethernet1/5
-			  no switchport
-			  ip address 192.168.2.10/24
-			  ip ospf network point-to-point
-			  no ip ospf passive-interface
-			  ip router ospf 1 area 0.0.0.2
-			  ip pim sparse-mode
-			  no shutdown
+	interface Ethernet1/5
+	  no switchport
+	  ip address 192.168.2.10/24
+	  ip ospf network point-to-point
+	  no ip ospf passive-interface
+	  ip router ospf 1 area 0.0.0.2
+	  ip pim sparse-mode
+	  no shutdown
 
-			interface loopback0
-			  ip address 2.2.2.2/32
-			  ip ospf network point-to-point
-			  ip router ospf 1 area 0.0.0.2
-			  ip pim sparse-mode
+	interface loopback0
+	  ip address 2.2.2.2/32
+	  ip ospf network point-to-point
+	  ip router ospf 1 area 0.0.0.2
+	  ip pim sparse-mode
 
+### Проверка работоспособности стенда
+
+#### Устройство switch (оно же - RP)
+
+##### <> Информация о multicast-маршрутизации на устройстве switch после того, как на нём настроили протокол PIM-SM
+
+	switch# show ip mroute
+	IP Multicast Routing Table for VRF "default"
+
+	(*, 232.0.0.0/8), uptime: 1d23h, pim ip
+	  Incoming interface: Null, RPF nbr: 0.0.0.0
+	  Outgoing interface list: (count: 0)
+
+##### <> Информация о multicast-маршрутизации на устройстве switch после того, как клиент отправил IGMP-запрос о том, что хочет получать multicast-трафик с адресом 239.3.3.3:
+
+	switch# show ip mroute
+	IP Multicast Routing Table for VRF "default"
+
+	(*, 232.0.0.0/8), uptime: 1d23h, pim ip
+	  Incoming interface: Null, RPF nbr: 0.0.0.0
+	  Outgoing interface list: (count: 0)
+
+	(*, 239.3.3.3/32), uptime: 1d22h, pim ip                    <-------- адреса сервера, который готов вещать на адрес 239.3.3.3 нет, но вот запрос на такую группу уже есть
+	  Incoming interface: loopback0, RPF nbr: 100.100.100.100
+	  Outgoing interface list: (count: 1)
+	    Ethernet1/3, uptime: 1d22h, pim
+	    
+##### <> Информация о multicast-маршрутизации на устройстве switch после того, как multicast-сервер начал вещать на адрес 239.3.3.3:
+
+	switch# show ip mroute
+	IP Multicast Routing Table for VRF "default"
+
+	(*, 232.0.0.0/8), uptime: 1d23h, pim ip
+	  Incoming interface: Null, RPF nbr: 0.0.0.0
+	  Outgoing interface list: (count: 0)
+
+	(*, 239.3.3.3/32), uptime: 1d22h, pim ip
+	  Incoming interface: loopback0, RPF nbr: 100.100.100.100
+	  Outgoing interface list: (count: 1)
+	    Ethernet1/3, uptime: 1d22h, pim
+
+	(192.168.2.1/32, 239.3.3.3/32), uptime: 00:00:03, pim mrib ip    <-------- появился адрес сервера, который готов вещать на группу 239.3.3.3
+	  Incoming interface: Ethernet1/2, RPF nbr: 10.0.0.29, internal  <-------- появился Incoming-интерфейс
+	  Outgoing interface list: (count: 1)
+	    Ethernet1/3, uptime: 00:00:03, pim                           <-------- Outgoing-интерфейс, который стал известен после отправки клиентом IGMP-запроса 
+
+#### Вывод WIRESHARK
+
+На интерфейсе e1/2 устройства SWITCH после запуска команды "ping 239.3.3.3" с сервера, наблюдается следующее:
+
+##### Запрос регистрируется
+
+![mc](https://user-images.githubusercontent.com/55625869/145269715-21a9dbc2-b62b-4eb9-bd1a-343649784250.PNG)
+
+##### Трафик начинает идти
+
+![mc2](https://user-images.githubusercontent.com/55625869/145269786-8b6b5e55-0b4e-406d-877d-2773fdfc18ad.PNG)
