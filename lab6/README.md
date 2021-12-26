@@ -132,9 +132,11 @@ P.S. NVE-интерфейсы также работают через loopback-и
 
 ## Проверка работоспособности стенда
 
-      leaf2# show bgp l2vpn evpn
+### LEAF4
+
+      leaf4# show bgp l2vpn evpn
       BGP routing table information for VRF default, address family L2VPN EVPN
-      BGP table version is 11, Local Router ID is 2.2.2.2
+      BGP table version is 9, Local Router ID is 4.4.4.4
       Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
       Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
       njected
@@ -142,9 +144,20 @@ P.S. NVE-интерфейсы также работают через loopback-и
       est2
 
          Network            Next Hop            Metric     LocPrf     Weight Path
-      Route Distinguisher: 2.2.2.2:32777    (L2VNI 10000)
-      *>l[2]:[0]:[0]:[48]:[5000.0001.0007]:[0]:[0.0.0.0]/216
-                            2.2.2.2                           100      32768 i
-      *>l[3]:[0]:[32]:[2.2.2.2]/88
-                            2.2.2.2                           100      32768 i
+      Route Distinguisher: 2.2.2.2:32777
+      *>i[2]:[0]:[0]:[48]:[5000.0001.0007]:[0]:[0.0.0.0]/216
+                            2.2.2.2                           100          0 i
+      *>i[3]:[0]:[32]:[2.2.2.2]/88
+                            2.2.2.2                           100          0 i
+
+      Route Distinguisher: 4.4.4.4:32777    (L2VNI 10000)
+      *>i[2]:[0]:[0]:[48]:[5000.0001.0007]:[0]:[0.0.0.0]/216
+                            2.2.2.2                           100          0 i
+      *>l[2]:[0]:[0]:[48]:[5000.0006.0007]:[0]:[0.0.0.0]/216
+                            4.4.4.4                           100      32768 i
+      *>i[3]:[0]:[32]:[2.2.2.2]/88
+                            2.2.2.2                           100          0 i
+      *>l[3]:[0]:[32]:[4.4.4.4]/88
+                            4.4.4.4                           100      32768 i
+
 
