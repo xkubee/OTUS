@@ -15,7 +15,11 @@ vdc leaf4 id 1
   limit-resource m4route-mem minimum 58 maximum 58
   limit-resource m6route-mem minimum 8 maximum 8
 
+nv overlay evpn
 feature ospf
+feature bgp
+feature vn-segment-vlan-based
+feature nv overlay
 
 no password strength-check
 username admin password 5 $5$GEOJHO$kUl64O4yXuwIqM99MINNn1R5mFokEID9Fct48WOjJwB  role network-admin
@@ -27,7 +31,16 @@ rmon event 3 description ERROR(3) owner PMON@ERROR
 rmon event 4 description WARNING(4) owner PMON@WARNING
 rmon event 5 description INFORMATION(5) owner PMON@INFO
 
-vlan 1
+vlan 1,10
+vlan 10
+  vn-segment 10000
+  
+interface nve1   
+  no shutdown
+  host-reachability protocol bgp
+  source-interface loopback0
+  member vni 10000
+    ingress-replication protocol bgp
 
 vrf context management
 
@@ -40,11 +53,7 @@ interface Ethernet1/1
   no shutdown
 
 interface Ethernet1/2
-  no switchport
-  ip ospf network point-to-point
-  no ip ospf passive-interface
-  ip router ospf 1 area 0.0.0.4
-  no shutdown
+  switchport mode trunk
 
 interface Ethernet1/3
 
@@ -311,7 +320,14 @@ boot nxos bootflash:/nxos.9.2.2.bin
 router ospf 1
   router-id 4.4.4.4
   passive-interface default
-
+router bgp 65000
+  neighbor 30.30.30.30
+    remote-as 65000
+    update-source loopback0
+    address-family l2vpn evpn 
+      send-community
+      send-community extended
+      route-reflector-client
 
 !
 
