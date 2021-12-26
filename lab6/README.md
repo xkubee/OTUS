@@ -38,20 +38,30 @@ P.S. NVE-интерфейсы также работают через loopback-и
 
 ### Пример таблицы маршрутизации на устройстве leaf2
 
+      2.2.2.2/32, ubest/mbest: 2/0, attached      <--------------
+          *via 2.2.2.2, Lo0, [0/0], 4d02h, local 
+          *via 2.2.2.2, Lo0, [0/0], 4d02h, direct
+      4.4.4.4/32, ubest/mbest: 1/0                <--------------
+          *via 10.0.0.21, Eth1/2, [110/161], 00:29:55, ospf-1, inter
+      10.0.0.20/30, ubest/mbest: 1/0, attached
+          *via 10.0.0.22, Eth1/2, [0/0], 4d02h, direct
+      10.0.0.22/32, ubest/mbest: 1/0, attached
+          *via 10.0.0.22, Eth1/2, [0/0], 4d02h, local
+      10.0.0.24/30, ubest/mbest: 1/0
+          *via 10.0.0.21, Eth1/2, [110/80], 4d02h, ospf-1, intra
+      10.0.0.28/30, ubest/mbest: 1/0
+          *via 10.0.0.21, Eth1/2, [110/80], 4d02h, ospf-1, inter
+      10.0.0.32/30, ubest/mbest: 1/0
+          *via 10.0.0.21, Eth1/2, [110/160], 4d02h, ospf-1, inter
+      10.0.0.36/30, ubest/mbest: 1/0
+          *via 10.0.0.21, Eth1/2, [110/120], 4d02h, ospf-1, inter
+      20.20.20.20/32, ubest/mbest: 1/0          <--------------
+          *via 10.0.0.21, Eth1/2, [110/41], 4d02h, ospf-1, inter
+      30.30.30.30/32, ubest/mbest: 1/0          <--------------
+          *via 10.0.0.21, Eth1/2, [110/121], 4d02h, ospf-1, inter
+      100.100.100.100/32, ubest/mbest: 1/0      <--------------
+          *via 10.0.0.21, Eth1/2, [110/81], 4d02h, ospf-1, inter
 
-      2.2.2.2/32, ubest/mbest: 2/0, attached               <-------- свой же loopback
-          *via 2.2.2.2, Lo0, [0/0], 01:07:43, local
-         *via 2.2.2.2, Lo0, [0/0], 01:07:43, direct
-      20.20.20.20/32, ubest/mbest: 1/0                     <-------- loopback spine2
-        *via 10.0.0.21, Eth1/2, [110/41], 01:06:31, ospf-1, inter 
-      30.30.30.30/32, ubest/mbest: 1/0                     <-------- loopback spine3
-         *via 10.0.0.21, Eth1/2, [110/121], 01:06:31, ospf-1, inter
-      100.100.100.100/32, ubest/mbest: 1/0                 <-------- loopback switch
-         *via 10.0.0.21, Eth1/2, [110/81], 01:06:31, ospf-1, inter
-      192.168.2.0/24, ubest/mbest: 1/0, attached           <-------- сеть multicast-сервера
-         *via 192.168.2.10, Eth1/5, [0/0], 01:06:38, direct
-      192.168.2.10/32, ubest/mbest: 1/0, attached          <-------- адрес multicast-сервера
-         *via 192.168.2.10, Eth1/5, [0/0], 01:06:38, local
 
 ## Описание настроки оконечных устройств (CLIENT1)
 
@@ -160,4 +170,68 @@ P.S. NVE-интерфейсы также работают через loopback-и
       *>l[3]:[0]:[32]:[4.4.4.4]/88
                             4.4.4.4                           100      32768 i
 
+### LEAF2
 
+      leaf2# show bgp l2vpn evpn
+      BGP routing table information for VRF default, address family L2VPN EVPN
+      BGP table version is 24, Local Router ID is 2.2.2.2
+      Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
+      Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
+      njected
+      Origin codes: i - IGP, e - EGP, ? - incomplete, | - multipath, & - backup, 2 - b
+      est2
+
+         Network            Next Hop            Metric     LocPrf     Weight Path
+      Route Distinguisher: 2.2.2.2:32777    (L2VNI 10000)
+      *>l[2]:[0]:[0]:[48]:[5000.0001.0007]:[0]:[0.0.0.0]/216
+                            2.2.2.2                           100      32768 i
+      *>i[2]:[0]:[0]:[48]:[5000.0006.0007]:[0]:[0.0.0.0]/216
+                            4.4.4.4                           100          0 i
+      *>l[3]:[0]:[32]:[2.2.2.2]/88
+                            2.2.2.2                           100      32768 i
+      *>i[3]:[0]:[32]:[4.4.4.4]/88
+                            4.4.4.4                           100          0 i
+
+      Route Distinguisher: 4.4.4.4:32777
+      *>i[2]:[0]:[0]:[48]:[5000.0006.0007]:[0]:[0.0.0.0]/216
+                            4.4.4.4                           100          0 i
+      *>i[3]:[0]:[32]:[4.4.4.4]/88
+                            4.4.4.4                           100          0 i
+
+### SUPERSPINE
+
+      superspine# show bgp l2vpn evpn
+      BGP routing table information for VRF default, address family L2VPN EVPN
+      BGP table version is 59, Local Router ID is 100.100.100.100
+      Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
+      Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
+      njected
+      Origin codes: i - IGP, e - EGP, ? - incomplete, | - multipath, & - backup, 2 - b
+      est2
+
+         Network            Next Hop            Metric     LocPrf     Weight Path
+      Route Distinguisher: 2.2.2.2:32777
+      *>i[2]:[0]:[0]:[48]:[5000.0001.0007]:[0]:[0.0.0.0]/216
+                            2.2.2.2                           100          0 i
+      *>i[3]:[0]:[32]:[2.2.2.2]/88
+                            2.2.2.2                           100          0 i
+
+      Route Distinguisher: 4.4.4.4:32777
+      *>i[2]:[0]:[0]:[48]:[5000.0006.0007]:[0]:[0.0.0.0]/216
+                            4.4.4.4                           100          0 i
+      *>i[3]:[0]:[32]:[4.4.4.4]/88
+                            4.4.4.4                           100          0 i
+
+### Сетевая связность между CLIENT1 и CLIENT2
+
+      client2# ping 192.168.1.1
+      PING 192.168.1.1 (192.168.1.1): 56 data bytes
+      64 bytes from 192.168.1.1: icmp_seq=0 ttl=254 time=47.973 ms
+      64 bytes from 192.168.1.1: icmp_seq=1 ttl=254 time=55.707 ms
+      64 bytes from 192.168.1.1: icmp_seq=2 ttl=254 time=41.055 ms
+      64 bytes from 192.168.1.1: icmp_seq=3 ttl=254 time=47.054 ms
+      64 bytes from 192.168.1.1: icmp_seq=4 ttl=254 time=51.129 ms
+
+      --- 192.168.1.1 ping statistics ---
+      5 packets transmitted, 5 packets received, 0.00% packet loss
+      round-trip min/avg/max = 41.055/48.583/55.707 ms
