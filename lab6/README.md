@@ -20,7 +20,7 @@ P.S. NVE-интерфейсы также работают через loopback-и
 
 ## Схема сети
 
-![evpn vxlan](https://user-images.githubusercontent.com/55625869/147418975-abf36d3e-ec02-45c8-b5fc-992ed920aa5e.PNG)
+![evpn vxlan](https://user-images.githubusercontent.com/55625869/147421089-25426026-a294-4086-b6b9-0df5455a76e3.PNG)
 
 ## Адресное пространство
 
