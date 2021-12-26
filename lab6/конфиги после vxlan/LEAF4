@@ -1,8 +1,8 @@
 
 
 !Command: show running-config
-!Running configuration last done at: Mon Dec  6 18:57:00 2021
-!Time: Mon Dec  6 18:57:01 2021
+!Running configuration last done at: Sun Dec 26 21:57:38 2021
+!Time: Sun Dec 26 21:57:38 2021
 
 version 9.2(2) Bios:version  
 hostname leaf4
@@ -24,6 +24,7 @@ feature nv overlay
 no password strength-check
 username admin password 5 $5$GEOJHO$kUl64O4yXuwIqM99MINNn1R5mFokEID9Fct48WOjJwB  role network-admin
 ip domain-lookup
+copp profile strict
 snmp-server user admin network-admin auth md5 0xd28fad3d271597a10611c8170542f522 priv 0xd28fad3d271597a10611c8170542f522 localizedkey
 rmon event 1 description FATAL(1) owner PMON@FATAL
 rmon event 2 description CRITICAL(2) owner PMON@CRITICAL
@@ -34,15 +35,15 @@ rmon event 5 description INFORMATION(5) owner PMON@INFO
 vlan 1,10
 vlan 10
   vn-segment 10000
-  
-interface nve1   
+
+vrf context management
+
+interface nve1
   no shutdown
   host-reachability protocol bgp
   source-interface loopback0
   member vni 10000
     ingress-replication protocol bgp
-
-vrf context management
 
 interface Ethernet1/1
   no switchport
@@ -324,10 +325,11 @@ router bgp 65000
   neighbor 30.30.30.30
     remote-as 65000
     update-source loopback0
-    address-family l2vpn evpn 
+    address-family l2vpn evpn
       send-community
       send-community extended
       route-reflector-client
+
 
 !
 
