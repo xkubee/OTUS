@@ -232,16 +232,3 @@ P.S. NVE-интерфейсы также работают через loopback-и
       *>i[3]:[0]:[32]:[4.4.4.4]/88
                             4.4.4.4                           100          0 i
 
-### Сетевая связность между CLIENT1 и CLIENT2
-
-      client2# ping 192.168.2.1
-      PING 192.168.1.1 (192.168.1.1): 56 data bytes
-      64 bytes from 192.168.1.1: icmp_seq=0 ttl=254 time=47.973 ms
-      64 bytes from 192.168.1.1: icmp_seq=1 ttl=254 time=55.707 ms
-      64 bytes from 192.168.1.1: icmp_seq=2 ttl=254 time=41.055 ms
-      64 bytes from 192.168.1.1: icmp_seq=3 ttl=254 time=47.054 ms
-      64 bytes from 192.168.1.1: icmp_seq=4 ttl=254 time=51.129 ms
-
-      --- 192.168.1.1 ping statistics ---
-      5 packets transmitted, 5 packets received, 0.00% packet loss
-      round-trip min/avg/max = 41.055/48.583/55.707 ms
