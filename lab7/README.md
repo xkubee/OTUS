@@ -63,52 +63,60 @@ P.S. NVE-интерфейсы также работают через loopback-и
       100.100.100.100/32, ubest/mbest: 1/0      <--------------
           *via 10.0.0.21, Eth1/2, [110/81], 4d02h, ospf-1, inter
 
-
-## Описание настроки оконечных устройств (CLIENT1)
-
- #### 1. Включить интерфейс VLAN:
-      feature interface-vlan
-
- #### 2. Настроить интерфейс VLAN10:
-      
-      interface Vlan10
-        no shutdown
-        ip address 192.168.1.1/24
-
- #### 3. Настроить интерфейс Ethernet1/1:
-      
-      interface Ethernet1/1 
-        switchport mode trunk
-        switchport access vlan 10
-
 ## Описание настроки LEAF-устройств (LEAF2)
 
-### Настройка vn-сегмента
+### Включение нужных сервисов
 
+      nv overlay evpn
+      feature ospf
+      feature bgp
+      feature interface-vlan
+      feature vn-segment-vlan-based
+      feature nv overlay
+
+### Настройка виртуального mac-адреса
+
+      fabric forwarding anycast-gateway-mac 0001.0001.0001
+
+### Настройки VLAN-ов
+
+      vlan 1,10,99
       vlan 10
         vn-segment 10000
+      vlan 99
+        vn-segment 9999
 
-### Настройка NVE-интерфейса
+### Настройка vrf (vrf выступает в качестве связующего звена между интерфейсом vlan10 и интерфейсом vlan99)
+      
+      vrf context L3VNI
+        vni 9999
+        address-family ipv4 unicast
+          route-target both auto
+          route-target both auto evpn      
 
- #### 1. Перейти в меню настройки NVE-интерфейса:
+### Настройки интерфейсов (VLAN-интерфейсов, nve-интерфейса, физического интерфейса):
+
+      interface Vlan10
+        no shutdown
+        vrf member L3VNI
+        ip address 192.168.1.2/24
+        fabric forwarding mode anycast-gateway
+
+      interface Vlan99
+        no shutdown
+        vrf member L3VNI
+        ip forward
+
       interface nve1
-        
- #### 2. Включить его:
-      host-reachability protocol bgp
-      
- #### 3. Использовать в качестве source-интерфейса loopback-интерфейс:
-      source-interface loopback0
-      
- #### 4. Прописать, какой vn-сегмент будет настроен в данном nve-интерфейсе:
-      member vni 10000
-        ingress-replication protocol bgp
- #### 5. Включить возможность передавать информацию о vn-сегменте через EVPN:
-       feature nv overlay
-        
+        no shutdown
+        host-reachability protocol bgp
+        source-interface loopback0
+        member vni 9999 associate-vrf
+        member vni 10000
+          ingress-replication protocol bgp
 
-### Настройка физического интерфейса, направленного в сегмент клиента:
-       interface Ethernet1/5 
-         switchport mode trunk
+      interface Ethernet1/5
+        switchport mode trunk
 
 ### Настройка BGP
 
@@ -145,7 +153,7 @@ P.S. NVE-интерфейсы также работают через loopback-и
 
       leaf4# show bgp l2vpn evpn
       BGP routing table information for VRF default, address family L2VPN EVPN
-      BGP table version is 9, Local Router ID is 4.4.4.4
+      BGP table version is 112, Local Router ID is 4.4.4.4
       Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
       Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
       njected
@@ -156,16 +164,16 @@ P.S. NVE-интерфейсы также работают через loopback-и
       Route Distinguisher: 2.2.2.2:32777
       *>i[2]:[0]:[0]:[48]:[5000.0001.0007]:[0]:[0.0.0.0]/216
                             2.2.2.2                           100          0 i
+      *>i[2]:[0]:[0]:[48]:[5000.0001.0007]:[32]:[192.168.1.1]/272
+                            2.2.2.2                           100          0 i
       *>i[3]:[0]:[32]:[2.2.2.2]/88
                             2.2.2.2                           100          0 i
 
-      Route Distinguisher: 4.4.4.4:32777    (L2VNI 10000)
-      *>i[2]:[0]:[0]:[48]:[5000.0001.0007]:[0]:[0.0.0.0]/216
-                            2.2.2.2                           100          0 i
+      Route Distinguisher: 4.4.4.4:32777    (L2VNI 20000)
       *>l[2]:[0]:[0]:[48]:[5000.0006.0007]:[0]:[0.0.0.0]/216
                             4.4.4.4                           100      32768 i
-      *>i[3]:[0]:[32]:[2.2.2.2]/88
-                            2.2.2.2                           100          0 i
+      *>l[2]:[0]:[0]:[48]:[5000.0006.0007]:[32]:[192.168.2.1]/272
+                            4.4.4.4                           100      32768 i
       *>l[3]:[0]:[32]:[4.4.4.4]/88
                             4.4.4.4                           100      32768 i
 
@@ -173,7 +181,7 @@ P.S. NVE-интерфейсы также работают через loopback-и
 
       leaf2# show bgp l2vpn evpn
       BGP routing table information for VRF default, address family L2VPN EVPN
-      BGP table version is 24, Local Router ID is 2.2.2.2
+      BGP table version is 106, Local Router ID is 2.2.2.2
       Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
       Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
       njected
@@ -184,24 +192,23 @@ P.S. NVE-интерфейсы также работают через loopback-и
       Route Distinguisher: 2.2.2.2:32777    (L2VNI 10000)
       *>l[2]:[0]:[0]:[48]:[5000.0001.0007]:[0]:[0.0.0.0]/216
                             2.2.2.2                           100      32768 i
-      *>i[2]:[0]:[0]:[48]:[5000.0006.0007]:[0]:[0.0.0.0]/216
-                            4.4.4.4                           100          0 i
+      *>l[2]:[0]:[0]:[48]:[5000.0001.0007]:[32]:[192.168.1.1]/272
+                            2.2.2.2                           100      32768 i
       *>l[3]:[0]:[32]:[2.2.2.2]/88
                             2.2.2.2                           100      32768 i
-      *>i[3]:[0]:[32]:[4.4.4.4]/88
-                            4.4.4.4                           100          0 i
 
       Route Distinguisher: 4.4.4.4:32777
       *>i[2]:[0]:[0]:[48]:[5000.0006.0007]:[0]:[0.0.0.0]/216
+                            4.4.4.4                           100          0 i
+      *>i[2]:[0]:[0]:[48]:[5000.0006.0007]:[32]:[192.168.2.1]/272
                             4.4.4.4                           100          0 i
       *>i[3]:[0]:[32]:[4.4.4.4]/88
                             4.4.4.4                           100          0 i
 
 ### SUPERSPINE
 
-      superspine# show bgp l2vpn evpn
       BGP routing table information for VRF default, address family L2VPN EVPN
-      BGP table version is 59, Local Router ID is 100.100.100.100
+      BGP table version is 101, Local Router ID is 100.100.100.100
       Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
       Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
       njected
@@ -212,18 +219,22 @@ P.S. NVE-интерфейсы также работают через loopback-и
       Route Distinguisher: 2.2.2.2:32777
       *>i[2]:[0]:[0]:[48]:[5000.0001.0007]:[0]:[0.0.0.0]/216
                             2.2.2.2                           100          0 i
+      *>i[2]:[0]:[0]:[48]:[5000.0001.0007]:[32]:[192.168.1.1]/272
+                            2.2.2.2                           100          0 i
       *>i[3]:[0]:[32]:[2.2.2.2]/88
                             2.2.2.2                           100          0 i
 
       Route Distinguisher: 4.4.4.4:32777
       *>i[2]:[0]:[0]:[48]:[5000.0006.0007]:[0]:[0.0.0.0]/216
                             4.4.4.4                           100          0 i
+      *>i[2]:[0]:[0]:[48]:[5000.0006.0007]:[32]:[192.168.2.1]/272
+                            4.4.4.4                           100          0 i
       *>i[3]:[0]:[32]:[4.4.4.4]/88
                             4.4.4.4                           100          0 i
 
 ### Сетевая связность между CLIENT1 и CLIENT2
 
-      client2# ping 192.168.1.1
+      client2# ping 192.168.2.1
       PING 192.168.1.1 (192.168.1.1): 56 data bytes
       64 bytes from 192.168.1.1: icmp_seq=0 ttl=254 time=47.973 ms
       64 bytes from 192.168.1.1: icmp_seq=1 ttl=254 time=55.707 ms
