@@ -59,7 +59,7 @@
       vrf context L3VNI
         vni 9999
         address-family ipv4 unicast
-          route-target import 9999:9999     <----- добавление RT на импорт и экспорт
+          route-target import 9999:9999     
           route-target import 9999:9999 evpn
           route-target export 9999:9999
           route-target export 9999:9999 evpn
