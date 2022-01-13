@@ -177,30 +177,30 @@
 
 ### SUPERSPINE
 
+      superspine# show bgp l2vpn evpn
       BGP routing table information for VRF default, address family L2VPN EVPN
-      BGP table version is 101, Local Router ID is 100.100.100.100
+      BGP table version is 22, Local Router ID is 100.100.100.100
       Status: s-suppressed, x-deleted, S-stale, d-dampened, h-history, *-valid, >-best
-      Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-i
-      njected
-      Origin codes: i - IGP, e - EGP, ? - incomplete, | - multipath, & - backup, 2 - b
-      est2
+      Path type: i-internal, e-external, c-confed, l-local, a-aggregate, r-redist, I-injected
+      Origin codes: i - IGP, e - EGP, ? - incomplete, | - multipath, & - backup, 2 - best2
 
          Network            Next Hop            Metric     LocPrf     Weight Path
-      Route Distinguisher: 2.2.2.2:32777
-      *>i[2]:[0]:[0]:[48]:[5000.0001.0007]:[0]:[0.0.0.0]/216
-                            2.2.2.2                           100          0 i
-      *>i[2]:[0]:[0]:[48]:[5000.0001.0007]:[32]:[192.168.1.1]/272
-                            2.2.2.2                           100          0 i
-      *>i[3]:[0]:[32]:[2.2.2.2]/88
-                            2.2.2.2                           100          0 i
+      Route Distinguisher: 20.20.20.20:32777
+      *>e[2]:[0]:[0]:[48]:[5000.0002.0007]:[0]:[0.0.0.0]/216
+                            20.20.20.20                                    0 65001 i
+      *>e[2]:[0]:[0]:[48]:[5000.0002.0007]:[32]:[192.168.1.1]/272
+                            20.20.20.20                                    0 65001 i
+      *>e[3]:[0]:[32]:[20.20.20.20]/88
+                            20.20.20.20                                    0 65001 i
 
-      Route Distinguisher: 4.4.4.4:32777
-      *>i[2]:[0]:[0]:[48]:[5000.0006.0007]:[0]:[0.0.0.0]/216
-                            4.4.4.4                           100          0 i
-      *>i[2]:[0]:[0]:[48]:[5000.0006.0007]:[32]:[192.168.2.1]/272
-                            4.4.4.4                           100          0 i
-      *>i[3]:[0]:[32]:[4.4.4.4]/88
-                            4.4.4.4                           100          0 i
+      Route Distinguisher: 30.30.30.30:32777
+      *>e[2]:[0]:[0]:[48]:[5000.000a.0007]:[0]:[0.0.0.0]/216
+                            30.30.30.30                                    0 65002 i
+      *>e[2]:[0]:[0]:[48]:[5000.000a.0007]:[32]:[192.168.2.1]/272
+                            30.30.30.30                                    0 65002 i
+      *>e[3]:[0]:[32]:[30.30.30.30]/88
+                            30.30.30.30                                    0 65002 i
+
 
 ### Сетевая связность между CLIENT1 и CLIENT2
 
